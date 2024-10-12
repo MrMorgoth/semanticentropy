@@ -1,77 +1,74 @@
 import streamlit as st
-import shap
+import requests
 import numpy as np
-import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.pipeline import make_pipeline
+from collections import Counter
+from math import log2
 
-# Train a simple sentiment analysis model
-def train_sentiment_model():
-    # Example training data (positive and negative sentences)
-    data = pd.DataFrame({
-        'text': ['I love this product', 'This is terrible', 'Absolutely fantastic', 'Not good at all', 'I am very happy', 'This is the worst'],
-        'label': [1, 0, 1, 0, 1, 0]
-    })
+# Claude API interaction
+def query_claude_api(prompt, api_key):
+    """Query the Claude API and return the response"""
+    url = "https://api.anthropic.com/v1/complete"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    data = {
+        "prompt": prompt,
+        "model": "claude-v1",
+        "max_tokens_to_sample": 100,
+        "temperature": 0.7
+    }
     
-    vectorizer = CountVectorizer()
-    model = LogisticRegression()
+    response = requests.post(url, headers=headers, json=data)
+    response_data = response.json()
+    return response_data.get("completion", "")
 
-    # Create a pipeline with vectorizer and model
-    pipeline = make_pipeline(vectorizer, model)
-    pipeline.fit(data['text'], data['label'])
-
-    return pipeline, vectorizer, model
-
-# Get SHAP explainer for the model
-def get_shap_explainer(model, X_train_transformed):
-    explainer = shap.LinearExplainer(model, X_train_transformed, feature_perturbation="interventional")
-    return explainer
-
-# Predict sentiment and explain with SHAP values
-def predict_and_explain(text, vectorizer, model, explainer):
-    # Transform the input text using the vectorizer
-    transformed_text = vectorizer.transform([text])
+# Entropy calculation function
+def calculate_entropy(responses):
+    """Calculate entropy of the responses"""
+    response_count = Counter(responses)
+    total_responses = len(responses)
     
-    # Predict sentiment
-    prediction = model.predict(transformed_text)[0]
-    prediction_proba = model.predict_proba(transformed_text)[0]
+    entropy = -sum((count / total_responses) * log2(count / total_responses) for count in response_count.values())
+    return entropy
 
-    # Explain prediction using SHAP values
-    shap_values = explainer.shap_values(transformed_text)
-    return prediction, prediction_proba, shap_values
+# Streamlit app layout
+st.title("Chatbot with Claude (LLM) - Response Uncertainty Estimation")
 
-# Function to display SHAP force plot in Streamlit
-def st_shap(plot):
-    """Render a SHAP plot in Streamlit"""
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots(figsize=(12, 5))
-    shap.force_plot(plot, ax=ax)
-    st.pyplot(fig)
+# Input field for user's query
+user_input = st.text_input("Enter your query:", key="user_input")
 
-# Initialize the Streamlit app
-st.title("Chatbot with SHAP Value Explanations")
+# Claude API key (You can replace this with a more secure method of handling API keys)
+api_key = st.text_input("Enter your Claude API key:", type="password", key="api_key")
 
-# Train model and initialize SHAP explainer
-pipeline, vectorizer, model = train_sentiment_model()
+# If a query is entered, process the input
+if user_input and api_key:
+    # Query the LLM API 3 times
+    responses = []
+    with st.spinner("Querying Claude..."):
+        for _ in range(3):
+            response = query_claude_api(user_input, api_key)
+            responses.append(response)
 
-# Use transformed data from the training set to initialize SHAP explainer
-X_train_transformed = pipeline.named_steps['countvectorizer'].transform(['I love this product', 'This is terrible', 'Absolutely fantastic'])
-explainer = get_shap_explainer(model, X_train_transformed)
+    # Display the responses
+    st.write("### Responses from Claude:")
+    for idx, response in enumerate(responses):
+        st.write(f"Response {idx + 1}: {response}")
 
-# Chatbot interaction
-st.write("Ask a question or type a statement:")
+    # Calculate entropy to estimate uncertainty
+    entropy = calculate_entropy(responses)
+    
+    # Display the entropy
+    st.write(f"### Estimated Entropy (Uncertainty): {entropy:.4f}")
+    
+    # Higher entropy indicates more uncertainty in the LLM's responses
+    if entropy > 1.0:
+        st.write("⚠️ High entropy: The model is uncertain about its response.")
+    else:
+        st.write("✅ Low entropy: The model is fairly confident in its responses.")
 
-user_input = st.text_input("Your input", key="input_text")
-
-if user_input:
-    # Get prediction and SHAP values
-    prediction, prediction_proba, shap_values = predict_and_explain(user_input, vectorizer, model, explainer)
-
-    # Display the prediction
-    sentiment = "Positive" if prediction == 1 else "Negative"
-    st.write(f"Prediction: **{sentiment}** (Confidence: {prediction_proba[prediction]:.2f})")
-
-    # Display SHAP values as a force plot
-    st.write("Explanation of model's decision:")
-    st_shap(shap.force_plot(explainer.expected_value, shap_values[0], feature_names=vectorizer.get_feature_names_out()))
+# Add a brief explanation of entropy
+st.write("""
+#### Entropy in Language Models:
+Entropy measures the uncertainty in the model's responses. Higher entropy means the model is producing a wider variety of answers, indicating uncertainty. Lower entropy means the responses are more consistent, suggesting greater confidence.
+""")

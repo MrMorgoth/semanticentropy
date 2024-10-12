@@ -2,5 +2,4 @@ matplotlib
 numpy
 pandas
 scikit_learn
-shap==0.46.0
 streamlit
