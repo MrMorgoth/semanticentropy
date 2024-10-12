@@ -6,11 +6,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import make_pipeline
 
-# Load SHAP explainer
-def get_shap_explainer(pipeline):
-    explainer = shap.Explainer(pipeline)
-    return explainer
-
 # Train a simple sentiment analysis model
 def train_sentiment_model():
     # Example training data (positive and negative sentences)
@@ -26,24 +21,43 @@ def train_sentiment_model():
     pipeline = make_pipeline(vectorizer, model)
     pipeline.fit(data['text'], data['label'])
 
-    return pipeline
+    return pipeline, vectorizer, model
+
+# Get SHAP explainer for the model
+def get_shap_explainer(model, X_train_transformed):
+    explainer = shap.LinearExplainer(model, X_train_transformed, feature_perturbation="interventional")
+    return explainer
 
 # Predict sentiment and explain with SHAP values
-def predict_and_explain(text, pipeline, explainer):
+def predict_and_explain(text, vectorizer, model, explainer):
+    # Transform the input text using the vectorizer
+    transformed_text = vectorizer.transform([text])
+    
     # Predict sentiment
-    prediction = pipeline.predict([text])[0]
-    prediction_proba = pipeline.predict_proba([text])[0]
+    prediction = model.predict(transformed_text)[0]
+    prediction_proba = model.predict_proba(transformed_text)[0]
 
     # Explain prediction using SHAP values
-    shap_values = explainer([text])
+    shap_values = explainer.shap_values(transformed_text)
     return prediction, prediction_proba, shap_values
+
+# Function to display SHAP force plot in Streamlit
+def st_shap(plot):
+    """Render a SHAP plot in Streamlit"""
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(12, 5))
+    shap.force_plot(plot, ax=ax)
+    st.pyplot(fig)
 
 # Initialize the Streamlit app
 st.title("Chatbot with SHAP Value Explanations")
 
 # Train model and initialize SHAP explainer
-pipeline = train_sentiment_model()
-explainer = get_shap_explainer(pipeline)
+pipeline, vectorizer, model = train_sentiment_model()
+
+# Use transformed data from the training set to initialize SHAP explainer
+X_train_transformed = pipeline.named_steps['countvectorizer'].transform(['I love this product', 'This is terrible', 'Absolutely fantastic'])
+explainer = get_shap_explainer(model, X_train_transformed)
 
 # Chatbot interaction
 st.write("Ask a question or type a statement:")
@@ -52,7 +66,7 @@ user_input = st.text_input("Your input", key="input_text")
 
 if user_input:
     # Get prediction and SHAP values
-    prediction, prediction_proba, shap_values = predict_and_explain(user_input, pipeline, explainer)
+    prediction, prediction_proba, shap_values = predict_and_explain(user_input, vectorizer, model, explainer)
 
     # Display the prediction
     sentiment = "Positive" if prediction == 1 else "Negative"
@@ -60,15 +74,4 @@ if user_input:
 
     # Display SHAP values as a force plot
     st.write("Explanation of model's decision:")
-    shap_values_text = shap_values[0]
-    st_shap(shap.force_plot(explainer.expected_value[0], shap_values_text.values, user_input, matplotlib=True))
-
-# Function to display SHAP force plot in Streamlit
-def st_shap(plot, height=None):
-    """Render a SHAP plot in Streamlit"""
-    import matplotlib.pyplot as plt
-    import io
-
-    fig, ax = plt.subplots(figsize=(12, 5))
-    shap.force_plot(plot, ax=ax)
-    st.pyplot(fig)
+    st_shap(shap.force_plot(explainer.expected_value, shap_values[0], feature_names=vectorizer.get_feature_names_out()))
