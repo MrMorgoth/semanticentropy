@@ -20,8 +20,22 @@ def query_claude_api(prompt, api_key):
     }
     
     response = requests.post(url, headers=headers, json=data)
-    response_data = response.json()
-    return response_data.get("completion", "")
+    
+    # Debugging: Display the full response
+    st.write("Full response from Claude API:", response.json())
+    
+    # Check if the API response is successful
+    if response.status_code == 200:
+        response_data = response.json()
+        # Check if 'completion' is in the response data
+        if "completion" in response_data:
+            return response_data["completion"]
+        else:
+            st.error("Error: 'completion' field not found in API response.")
+            return ""
+    else:
+        st.error(f"Error: API call failed with status code {response.status_code}")
+        return ""
 
 # Entropy calculation function
 def calculate_entropy(responses):
@@ -48,25 +62,30 @@ if user_input and api_key:
     with st.spinner("Querying Claude..."):
         for _ in range(3):
             response = query_claude_api(user_input, api_key)
-            responses.append(response)
-    st.write(responses)
-    # Display the responses
-    st.write("### Responses from Claude:")
-    for idx, response in enumerate(responses):
-        st.write(f"Response {idx + 1}: {response}")
+            if response:  # Ensure we only store non-empty responses
+                responses.append(response)
 
-    # Calculate entropy to estimate uncertainty
-    entropy = calculate_entropy(responses)
-    
-    # Display the entropy
-    st.write(f"### Estimated Entropy (Uncertainty): {entropy:.2f}")
-    
-    # Higher entropy indicates more uncertainty in the LLM's responses
-    if entropy > 1.0:
-        st.write("⚠️ High entropy: The model is uncertain about its response.")
+    # Check if we received valid responses
+    if responses:
+        # Display the responses
+        st.write("### Responses from Claude:")
+        for idx, response in enumerate(responses):
+            st.write(f"Response {idx + 1}: {response}")
+
+        # Calculate entropy to estimate uncertainty
+        entropy = calculate_entropy(responses)
+        
+        # Display the entropy
+        st.write(f"### Estimated Entropy (Uncertainty): {entropy:.4f}")
+        
+        # Higher entropy indicates more uncertainty in the LLM's responses
+        if entropy > 1.0:
+            st.write("⚠️ High entropy: The model is uncertain about its response.")
+        else:
+            st.write("✅ Low entropy: The model is fairly confident in its responses.")
     else:
-        st.write("✅ Low entropy: The model is fairly confident in its responses.")
-
+        st.error("Error: No valid responses received from Claude.")
+    
 # Add a brief explanation of entropy
 st.write("""
 #### Entropy in Language Models:
