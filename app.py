@@ -3,32 +3,32 @@ import requests
 import numpy as np
 from collections import Counter
 from math import log2
+import anthropic
 
-api_key = st.secrets["CLAUDE_API_KEY"]
+#api_key = st.secrets["CLAUDE_API_KEY"]
 
+client = anthropic.Anthropic(
+    # defaults to os.environ.get("ANTHROPIC_API_KEY")
+    api_key=st.secrets["CLAUDE_API_KEY"],
+)
 # Claude API interaction
 def query_claude_api(prompt, api_key):
     """Query the Claude API and return the response"""
-    url = "https://api.anthropic.com/v1/complete"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    data = {
-        "prompt": prompt,
-        "model": "claude-v1",
-        "max_tokens_to_sample": 100,
-        "temperature": 0.7
-    }
-    
-    response = requests.post(url, headers=headers, json=data)
+    message = client.messages.create(
+    model="claude-3-5-sonnet-20240620",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": prompt}
+    ]
+)
+    response = message
     
     # Debugging: Display the full response
-    st.write("Full response from Claude API:", response.json())
+    st.write("Full response from Claude API:", message)
     
     # Check if the API response is successful
     if response.status_code == 200:
-        response_data = response.json()
+        response_data = message.content
         # Check if 'completion' is in the response data
         if "completion" in response_data:
             return response_data["completion"]
@@ -36,7 +36,7 @@ def query_claude_api(prompt, api_key):
             st.error("Error: 'completion' field not found in API response.")
             return ""
     else:
-        st.error(f"Error: API call failed with status code {response.status_code}")
+        st.error(f"Error: API call failed with status code {message.status_code}")
         return ""
 
 # Entropy calculation function
