@@ -12,7 +12,7 @@ client = anthropic.Anthropic(
     api_key=st.secrets["CLAUDE_API_KEY"],
 )
 # Claude API interaction
-def query_claude_api(prompt, api_key):
+def query_claude_api(prompt):
     """Query the Claude API and return the response"""
     message = client.messages.create(
     model="claude-3-5-sonnet-20240620",
@@ -60,7 +60,7 @@ if user_input:
     responses = []
     with st.spinner("Querying Claude..."):
         for _ in range(3):
-            response = query_claude_api(user_input, api_key)
+            response = query_claude_api(user_input)
             if response:  # Ensure we only store non-empty responses
                 responses.append(response)
 
