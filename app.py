@@ -7,8 +7,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.pipeline import make_pipeline
 
 # Load SHAP explainer
-def get_shap_explainer(model, vectorizer):
-    explainer = shap.Explainer(model, vectorizer.transform)
+def get_shap_explainer(pipeline):
+    explainer = shap.Explainer(pipeline)
     return explainer
 
 # Train a simple sentiment analysis model
@@ -26,13 +26,13 @@ def train_sentiment_model():
     pipeline = make_pipeline(vectorizer, model)
     pipeline.fit(data['text'], data['label'])
 
-    return pipeline, vectorizer
+    return pipeline
 
 # Predict sentiment and explain with SHAP values
-def predict_and_explain(text, model, explainer):
+def predict_and_explain(text, pipeline, explainer):
     # Predict sentiment
-    prediction = model.predict([text])[0]
-    prediction_proba = model.predict_proba([text])[0]
+    prediction = pipeline.predict([text])[0]
+    prediction_proba = pipeline.predict_proba([text])[0]
 
     # Explain prediction using SHAP values
     shap_values = explainer([text])
@@ -42,8 +42,8 @@ def predict_and_explain(text, model, explainer):
 st.title("Chatbot with SHAP Value Explanations")
 
 # Train model and initialize SHAP explainer
-model, vectorizer = train_sentiment_model()
-explainer = get_shap_explainer(model.named_steps['logisticregression'], model.named_steps['countvectorizer'])
+pipeline = train_sentiment_model()
+explainer = get_shap_explainer(pipeline)
 
 # Chatbot interaction
 st.write("Ask a question or type a statement:")
@@ -52,7 +52,7 @@ user_input = st.text_input("Your input", key="input_text")
 
 if user_input:
     # Get prediction and SHAP values
-    prediction, prediction_proba, shap_values = predict_and_explain(user_input, model, explainer)
+    prediction, prediction_proba, shap_values = predict_and_explain(user_input, pipeline, explainer)
 
     # Display the prediction
     sentiment = "Positive" if prediction == 1 else "Negative"
