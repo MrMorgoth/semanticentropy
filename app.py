@@ -49,7 +49,7 @@ if user_input and api_key:
         for _ in range(3):
             response = query_claude_api(user_input, api_key)
             responses.append(response)
-
+    st.write(responses)
     # Display the responses
     st.write("### Responses from Claude:")
     for idx, response in enumerate(responses):
@@ -59,7 +59,7 @@ if user_input and api_key:
     entropy = calculate_entropy(responses)
     
     # Display the entropy
-    st.write(f"### Estimated Entropy (Uncertainty): {entropy:.4f}")
+    st.write(f"### Estimated Entropy (Uncertainty): {entropy:.2f}")
     
     # Higher entropy indicates more uncertainty in the LLM's responses
     if entropy > 1.0:
