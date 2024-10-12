@@ -26,18 +26,6 @@ def query_claude_api(prompt):
     # Debugging: Display the full response
     st.write("Full response from Claude API:", message)
     
-    # Check if the API response is successful
-    if response.status_code == 200:
-        response_data = message.content
-        # Check if 'completion' is in the response data
-        if "completion" in response_data:
-            return response_data["completion"]
-        else:
-            st.error("Error: 'completion' field not found in API response.")
-            return ""
-    else:
-        st.error(f"Error: API call failed with status code {message.status_code}")
-        return ""
 
 # Entropy calculation function
 def calculate_entropy(responses):
