@@ -4,6 +4,8 @@ import numpy as np
 from collections import Counter
 from math import log2
 
+api_key = st.secrets("CLAUDE_API_KEY")
+
 # Claude API interaction
 def query_claude_api(prompt, api_key):
     """Query the Claude API and return the response"""
@@ -52,11 +54,8 @@ st.title("Chatbot with Claude (LLM) - Response Uncertainty Estimation")
 # Input field for user's query
 user_input = st.text_input("Enter your query:", key="user_input")
 
-# Claude API key (You can replace this with a more secure method of handling API keys)
-api_key = st.text_input("Enter your Claude API key:", type="password", key="api_key")
-
 # If a query is entered, process the input
-if user_input and api_key:
+if user_input:
     # Query the LLM API 3 times
     responses = []
     with st.spinner("Querying Claude..."):
