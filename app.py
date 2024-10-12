@@ -4,7 +4,7 @@ import numpy as np
 from collections import Counter
 from math import log2
 
-api_key = st.secrets("CLAUDE_API_KEY")
+api_key = st.secrets["CLAUDE_API_KEY"]
 
 # Claude API interaction
 def query_claude_api(prompt, api_key):
