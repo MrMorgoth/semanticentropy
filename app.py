@@ -19,14 +19,14 @@ def train_sentiment_model():
         'label': [1, 0, 1, 0, 1, 0]
     })
     
-    vectoriser = CountVectorizer()
+    vectorizer = CountVectorizer()
     model = LogisticRegression()
 
     # Create a pipeline with vectorizer and model
-    pipeline = make_pipeline(vectoriser, model)
+    pipeline = make_pipeline(vectorizer, model)
     pipeline.fit(data['text'], data['label'])
 
-    return pipeline, vectoriser
+    return pipeline, vectorizer
 
 # Predict sentiment and explain with SHAP values
 def predict_and_explain(text, model, explainer):
