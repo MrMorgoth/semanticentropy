@@ -24,7 +24,7 @@ def query_claude_api(prompt):
     response = message
     
     # Debugging: Display the full response
-    st.write("Full response from Claude API:", message)
+    st.write("Full response from Claude API:", message.content)
     
 
 # Entropy calculation function
