@@ -21,7 +21,7 @@ def query_claude_api(prompt):
         {"role": "user", "content": prompt}
     ]
 )
-   
+    st.write(message.content[0])
     return message.content[0]
 
 # Entropy calculation function
