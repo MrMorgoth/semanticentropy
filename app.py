@@ -15,6 +15,7 @@ client = anthropic.Anthropic(
     # defaults to os.environ.get("ANTHROPIC_API_KEY")
     api_key=st.secrets["CLAUDE_API_KEY"],
 )
+
 # Claude API interaction
 def query_claude_api(prompt):
     """Query the Claude API and return the response"""
