@@ -47,17 +47,21 @@ if "messages" not in st.session_state.keys():  # Initialise the chat messages hi
         }
     ]
 
+if prompt := st.chat_input(
+    "Ask a question"
+):  # Prompt for user input and save to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
 # Input field for user's query
-user_input = st.text_input("Enter your query:", key="user_input")
+#user_input = st.text_input("Enter your query:", key="user_input")
 
 # If a query is entered, process the input
-if user_input:
+if prompt:
     # Query the LLM API 3 times
     responses = []
     with st.spinner("Querying Claude..."):
         for _ in range(3):
-            response = query_claude_api(user_input)
+            response = query_claude_api(prompt)
             if response:  # Ensure we only store non-empty responses
                 responses.append(response)
 
@@ -67,12 +71,12 @@ if user_input:
         chosen_response = responses[0]
 
         # Add user query and chosen response to the chat history
-        st.session_state.messages.append({"user": user_input, "response": chosen_response})
+        st.session_state.messages.append({"user": prompt, "response": chosen_response})
         
         for message in st.session_state.messages:  # Write message history to UI
             with st.chat_message(message["role"]):
                 st.write(message["content"])
-                
+
         # Display the responses
         st.write("### Responses from Claude:")
         for idx, response in enumerate(responses):
