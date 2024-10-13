@@ -7,6 +7,10 @@ import anthropic
 
 #api_key = st.secrets["CLAUDE_API_KEY"]
 
+st.set_page_config(page_title="LLM Uncertainty", page_icon="䷅", layout="centered", initial_sidebar_state="auto", menu_items=None)
+# Streamlit app layout
+st.title("Chatbot with Claude (LLM) - Response Uncertainty Estimation")
+
 client = anthropic.Anthropic(
     # defaults to os.environ.get("ANTHROPIC_API_KEY")
     api_key=st.secrets["CLAUDE_API_KEY"],
@@ -21,7 +25,6 @@ def query_claude_api(prompt):
         {"role": "user", "content": prompt}
     ]
 )
-    st.write(message.content[0].text)
     return message.content[0].text
 
 # Entropy calculation function
@@ -35,9 +38,6 @@ def calculate_entropy(responses):
     
     entropy = -sum((count / total_responses) * log2(count / total_responses) for count in response_count.values())
     return entropy
-
-# Streamlit app layout
-st.title("Chatbot with Claude (LLM) - Response Uncertainty Estimation")
 
 # Input field for user's query
 user_input = st.text_input("Enter your query:", key="user_input")
@@ -63,7 +63,7 @@ if user_input:
         entropy = calculate_entropy(responses)
         
         # Display the entropy
-        st.write(f"### Estimated Entropy (Uncertainty): {entropy:.4f}")
+        #st.write(f"### Estimated Entropy (Uncertainty): {entropy:.4f}")
         
         # Higher entropy indicates more uncertainty in the LLM's responses
         if entropy > 1.0:
