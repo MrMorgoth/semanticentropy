@@ -22,7 +22,7 @@ def query_claude_api(prompt):
     ]
 )
    
-    return message.content
+    return message.content["text"]
 
 # Entropy calculation function
 def calculate_entropy(responses):
