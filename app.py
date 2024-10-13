@@ -39,29 +39,16 @@ def calculate_entropy(responses):
     entropy = -sum((count / total_responses) * log2(count / total_responses) for count in response_count.values())
     return entropy
 
-if "messages" not in st.session_state.keys():  # Initialise the chat messages history
-    st.session_state.messages = [
-        {
-            "role": "assistant",
-            "content": "Ask me a question!",
-        }
-    ]
-
-if prompt := st.chat_input(
-    "Ask a question"
-):  # Prompt for user input and save to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-
 # Input field for user's query
-#user_input = st.text_input("Enter your query:", key="user_input")
+user_input = st.text_input("Enter your query:", key="user_input")
 
 # If a query is entered, process the input
-if prompt:
+if user_input:
     # Query the LLM API 3 times
     responses = []
     with st.spinner("Querying Claude..."):
         for _ in range(3):
-            response = query_claude_api(prompt)
+            response = query_claude_api(user_input)
             if response:  # Ensure we only store non-empty responses
                 responses.append(response)
 
@@ -71,7 +58,7 @@ if prompt:
         chosen_response = responses[0]
 
         # Add user query and chosen response to the chat history
-        st.session_state.messages.append({"user": prompt, "response": chosen_response})
+        st.session_state.messages.append({"user": user_input, "response": chosen_response})
         
         for message in st.session_state.messages:  # Write message history to UI
             with st.chat_message(message["role"]):
