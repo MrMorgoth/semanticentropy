@@ -39,6 +39,15 @@ def calculate_entropy(responses):
     entropy = -sum((count / total_responses) * log2(count / total_responses) for count in response_count.values())
     return entropy
 
+if "messages" not in st.session_state.keys():  # Initialise the chat messages history
+    st.session_state.messages = [
+        {
+            "role": "assistant",
+            "content": "Ask me a question!",
+        }
+    ]
+
+
 # Input field for user's query
 user_input = st.text_input("Enter your query:", key="user_input")
 
@@ -54,6 +63,16 @@ if user_input:
 
     # Check if we received valid responses
     if responses:
+        # Select one of the responses to display (e.g., the first one)
+        chosen_response = responses[0]
+
+        # Add user query and chosen response to the chat history
+        st.session_state.messages.append({"user": user_input, "response": chosen_response})
+        
+        for message in st.session_state.messages:  # Write message history to UI
+            with st.chat_message(message["role"]):
+                st.write(message["content"])
+                
         # Display the responses
         st.write("### Responses from Claude:")
         for idx, response in enumerate(responses):
