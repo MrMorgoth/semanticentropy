@@ -57,17 +57,12 @@ if user_input:
         # Select one of the responses to display (e.g., the first one)
         chosen_response = responses[0]
 
-        # Add user query and chosen response to the chat history
-        st.session_state.messages.append({"user": user_input, "response": chosen_response})
-        
-        for message in st.session_state.messages:  # Write message history to UI
-            with st.chat_message(message["role"]):
-                st.write(message["content"])
-
         # Display the responses
-        st.write("### Responses from Claude:")
-        for idx, response in enumerate(responses):
-            st.write(f"Response {idx + 1}: {response}")
+        with st.chat_message("assistant"):
+        #st.write("### Responses from Claude:")
+            st.write(chosen_response)
+        #for idx, response in enumerate(responses):
+            #st.write(f"Response {idx + 1}: {response}")
 
         # Calculate entropy to estimate uncertainty
         entropy = calculate_entropy(responses)
