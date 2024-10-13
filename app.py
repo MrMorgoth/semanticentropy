@@ -27,8 +27,11 @@ def query_claude_api(prompt):
 # Entropy calculation function
 def calculate_entropy(responses):
     """Calculate entropy of the responses"""
-    response_count = Counter(responses)
-    total_responses = len(responses)
+    # Convert responses to strings to ensure they can be handled by Counter
+    response_strings = [str(response) for response in responses]
+    
+    response_count = Counter(response_strings)
+    total_responses = len(response_strings)
     
     entropy = -sum((count / total_responses) * log2(count / total_responses) for count in response_count.values())
     return entropy
