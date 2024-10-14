@@ -41,7 +41,7 @@ def calculate_entropy(responses):
     return entropy
 
 # Input field for user's query
-user_input = st.text_input("Enter your query:", key="user_input")
+user_input = st.chat_input("Ask me a question", key="user_input")
 
 # If a query is entered, process the input
 if user_input:
